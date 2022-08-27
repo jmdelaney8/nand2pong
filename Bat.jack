@@ -52,7 +52,7 @@ class Bat {
 
     /** Draws the bat. */
     method void draw() {
-        do Screen.drawRectangle(x, y + height, x + width, y);
+        do Screen.drawRectangle(x, y, x + width, y  + height);
         return;
     }
 
