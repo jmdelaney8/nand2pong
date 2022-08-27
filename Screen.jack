@@ -67,39 +67,36 @@ class Screen {
     }
 
     function void drawHorizontalLine(int x1, int x2, int y) {
-        var int dx, a, addr, mask, mod, val;
+        var int dx, a, addr, mask, segment_start, val, segment_end;
         let dx = x2 - x1;
         let a = 0;
         while (a < dx) {
-            if ((dx - a) > 15) {
-                let addr = screen + (y * 32) + ((x1 + a) / 16);
-                let mod = (x1 + a) - (((x1 + a) / 16) * 16);  // (x1 + a) % 16; 
-                if (mod = 0) {
-                    if (current_color) {
-                        let val = -1;
-                    }
-                    else {
-                        let val = 0;
-                    }
-                    let a = a + 16;
-                }
-                else {
-                    let mask = -two_to_the[16 - mod];
-                    let val = Memory.peek(addr);
-                    if (current_color) {
-                        let val = val | mask;
-                    }
-                    else {
-                        let val = (~mask) & val;
-                    }
-                    let a = a + (16 - mod);
-                }
-                do Memory.poke(addr, val);
+            // TODO: need to account for case where line end is inside a 16 bit address.
+            let addr = screen + (y * 32) + ((x1 + a) / 16);
+            let segment_start = (x1 + a) - (((x1 + a) / 16) * 16);  // (x1 + a) % 16;
+            let segment_end = segment_start + (dx - a);
+            if (segment_end < 16) {
+                let mask = two_to_the[segment_end] - 1;
+                let a = dx;
             }
             else {
-                do Screen.drawPixel(x1 + a, y);
-                let a = a + 1;
+                let mask = -1;
+                let a = a + 16 - segment_start;
             }
+            if (segment_start = 0) {
+                let mask = -1 & mask;
+            }
+            else {
+                let mask = mask & -two_to_the[16 - segment_start];
+            }
+            let val = Memory.peek(addr);
+            if (current_color) {
+                let val = val | mask;
+            }
+            else {
+                let val = (~mask) & val;
+            }
+            do Memory.poke(addr, val);
         }
         return;
     }
