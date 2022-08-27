@@ -67,13 +67,22 @@ class Screen {
     }
 
     function void drawHorizontalLine(int x1, int x2, int y) {
-        var int dx, a, addr, mask, segment_start, val, segment_end;
+        var int dx, a, base_addr, addr, mask, segment_start, val, segment_end;
+        var int div, mod, delta_a;
         let dx = x2 - x1;
         let a = 0;
+        let base_addr = screen + (y * 32);
+        let div = x1 / 16;
+        let mod = x1 - (div * 16);
+        let delta_a = 0;
         while (a < dx) {
             // TODO: need to account for case where line end is inside a 16 bit address.
-            let addr = screen + (y * 32) + ((x1 + a) / 16);
-            let segment_start = (x1 + a) - (((x1 + a) / 16) * 16);  // (x1 + a) % 16;
+            if ((mod + delta_a) > 15) {
+                let div = div + 1;
+                let mod = mod + delta_a - 16;
+            }
+            let addr = base_addr + div;
+            let segment_start = mod;  // (x1 + a) % 16;
             let segment_end = segment_start + (dx - a);
             if (segment_end < 16) {
                 let mask = two_to_the[segment_end] - 1;
@@ -82,6 +91,7 @@ class Screen {
             else {
                 let mask = -1;
                 let a = a + 16 - segment_start;
+                let delta_a = 16 - segment_start;
             }
             if (segment_start = 0) {
                 let mask = -1 & mask;
