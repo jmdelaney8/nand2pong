@@ -61,11 +61,30 @@ class Screen {
         return;
     }
 
+    function void drawHorizontalLine(int x1, int x2, int y) {
+        var int dx, a, addr;
+        let dx = x2 - x1;
+        let a = 0;
+        while (a < dx) {
+            if ((((x1 + a) - (((x1 + a) / 16) * 16)) = 0) & ((dx - a) > 15)) {
+                let addr = screen + (y * 32) + ((x1 + a) / 16);
+                do Memory.poke(addr, -1);
+                let a = a + 16;
+            }
+            else {
+                do Screen.drawPixel(x1 + a, y);
+                let a = a + 1;
+            }
+        }
+        return;
+    }
+
     /** Draws a line from pixel (x1,y1) to pixel (x2,y2), using the current color. */
     function void drawLine(int x1, int y1, int x2, int y2) {
         // TODO: Make special casses more efficient with whole address writes?
         var int x, y, dx, dy;
         var int a, b, diff;
+        var int mask;
         if (x1 < x2) {
             let x = x1;
             let y = y1;
@@ -82,9 +101,11 @@ class Screen {
         let b = 0;
         let diff = 0;
         if (dy = 0) {
-            while (a < dx) {
-                do Screen.drawPixel(x + a, y);
-                let a = a + 1;
+            if (x1 < x2) {
+                do Screen.drawHorizontalLine(x1, x2, y1);
+            }
+            else {
+                do Screen.drawHorizontalLine(x2, x1, y1);
             }
         }
         else {
@@ -138,11 +159,11 @@ class Screen {
     /** Draws a filled rectangle whose top left corner is (x1, y1)
      * and bottom right corner is (x2,y2), using the current color. */
     function void drawRectangle(int x1, int y1, int x2, int y2) {
-        var int x;
-        let x = x1;
-        while (x < (x2 + 1)) {
-            do Screen.drawLine(x, y1, x, y2);
-            let x = x + 1;
+        var int y;
+        let y = y2;
+        while (y < (y1 + 1)) {
+            do Screen.drawHorizontalLine(x1, x2, y);
+            let y = y + 1;
         }
         return;
     }
