@@ -82,7 +82,7 @@ class Screen {
                 let mod = mod + delta_a - 16;
             }
             let addr = base_addr + div;
-            let segment_start = mod;  // (x1 + a) % 16;
+            let segment_start = mod;
             let segment_end = segment_start + (dx - a);
             if (segment_end < 16) {
                 let mask = two_to_the[segment_end] - 1;
@@ -191,11 +191,56 @@ class Screen {
     /** Draws a filled rectangle whose top left corner is (x1, y1)
      * and bottom right corner is (x2,y2), using the current color. */
     function void drawRectangle(int x1, int y1, int x2, int y2) {
+        // TODO: I think its better to calc each segment then draw it from y1 to y2.
         var int y;
+        var int dx, a, base_addr, addr, mask, segment_start, val, segment_end;
+        var int div0, div, mod, mod0, delta_a;
         let y = y1;
+        let dx = x2 - x1;
+        let base_addr = screen + (y * 32);
+        let div0 = x1 / 16;
+        let mod0 = x1 - (div0 * 16);
+        
         while (y < (y2 + 1)) {
-            do Screen.drawHorizontalLine(x1, x2, y);
+            let a = 0;
+            let div = div0;
+            let mod = mod0;
+            let delta_a = 0;
+            while (a < dx) {
+                // TODO: need to account for case where line end is inside a 16 bit address.
+                if ((mod + delta_a) > 15) {
+                    let div = div + 1;
+                    let mod = mod + delta_a - 16;
+                }
+                let addr = base_addr + div;
+                let segment_start = mod;
+                let segment_end = segment_start + (dx - a);
+                if (segment_end < 16) {
+                    let mask = two_to_the[segment_end] - 1;
+                    let a = dx;
+                }
+                else {
+                    let mask = -1;
+                    let a = a + 16 - segment_start;
+                    let delta_a = 16 - segment_start;
+                }
+                if (segment_start = 0) {
+                    let mask = -1 & mask;
+                }
+                else {
+                    let mask = mask & -two_to_the[16 - segment_start];
+                }
+                let val = Memory.peek(addr);
+                if (current_color) {
+                    let val = val | mask;
+                }
+                else {
+                    let val = (~mask) & val;
+                }
+                do Memory.poke(addr, val);
+            }
             let y = y + 1;
+            let base_addr = base_addr + 32;
         }
         return;
     }
