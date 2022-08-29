@@ -192,6 +192,7 @@ class Screen {
      * and bottom right corner is (x2,y2), using the current color. */
     function void drawRectangle(int x1, int y1, int x2, int y2) {
         // TODO: I think its better to calc each segment then draw it from y1 to y2.
+        //       instead of raster across the screen line by line.
         var int y;
         var int dx, a, base_addr, addr, mask, segment_start, val, segment_end;
         var int div0, div, mod, mod0, delta_a;
@@ -228,7 +229,7 @@ class Screen {
                     let mask = -1 & mask;
                 }
                 else {
-                    let mask = mask & -two_to_the[16 - segment_start];
+                    let mask = mask & -(two_to_the[segment_start - 1]);
                 }
                 let val = Memory.peek(addr);
                 if (current_color) {
