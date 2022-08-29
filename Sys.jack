@@ -14,6 +14,7 @@ class Sys {
         do Math.init();
         do Screen.init();
         do Output.init();
+        do Keyboard.init();
 
         do Main.main();
         return;
@@ -27,11 +28,15 @@ class Sys {
 
     /** Waits approximately duration milliseconds and returns.  */
     function void wait(int duration) {
-        var int wait_cycles, i;
-        let wait_cycles = 15000;
+        var int ms_cycles, i, ms;
+        let ms_cycles = 50;
         let i = 0;
-        while (i < wait_cycles) {
-            let i = i + 1;
+        let ms = 0;
+        while (ms < duration) {
+            while (i < ms_cycles) {
+                let i = i + 1;
+            }
+            let ms = ms + 1;
         }
         return;
     }
