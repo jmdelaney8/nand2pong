@@ -9,6 +9,7 @@
  */
 class Math {
     static Array two_to_the;
+    static int temp_div, q_temp;
 
     /** Initializes the library. */
     function void init() {
@@ -16,6 +17,7 @@ class Math {
         let i = 1;
         let two_to_the = Array.new(16);
         let two_to_the[0] = 1;
+        let temp_div = 0;
         while (i < 16) {
             let two_to_the[i] = two_to_the[i - 1] + two_to_the[i - 1];
             let i = i + 1;
@@ -66,37 +68,55 @@ class Math {
      *  the Jack expressions x/y and divide(x,y) return the same value.
      */
     function int divide(int x, int y) {
+        // TODO: I don't know how to turn this 2 * y * q mult into addition
         var bool x_neg, y_neg;
-        var int q, out, y2;
+        var int out;
 
         let x_neg = x < 0;
         let y_neg = y < 0;
-        if (x < 0) {
+        if (x_neg) {
             let x = Math.abs(x);
         }
-        if (y < 0) {
+        if (y_neg) {
             let y = Math.abs(y);
         }
-        if (y > x) {
-            return 0;
-        }
-        let y2 = 2 * y;
-        if (y2 < 0) {
-            return 1;  // I think that's right?
-        }
-        let q = Math.divide(x, 2 * y);
-        if ((x - (2 * q * y)) < y) {
-            let out = 2 * q;
-        }
-        else {
-            let out = 2 * q + 1;
-        }
+        let temp_div = 0;
+        let q_temp = 0;
+        let out = Math.div(x, y);
         if ((x_neg & ~y_neg) | (~x_neg & y_neg)) {
             return -out;
         }
         else {
             return out;
         }
+    }
+
+    function int div(int x, int y) {
+        var int q, out;
+        if (y > x) {
+            return 0;
+        }
+        if (y + y < 0) {  // Check for overflow
+            return 1;
+        }
+        let q = Math.div(x, y + y);
+        if (q = 1) {
+            let temp_div = y + y;
+        }
+        else {
+            if (q_temp = 1) {
+                let temp_div = temp_div + y + y;
+            }
+        }
+        if ((x - temp_div) < y) {
+            let out = q + q;
+            let q_temp = 0;
+        }
+        else {
+            let out = q + q + 1;
+            let q_temp = 1;
+        }
+        return out;
     }
 
     /** Returns the integer part of the square root of x. */
