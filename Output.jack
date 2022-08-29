@@ -20,13 +20,29 @@ class Output {
     static Array charMaps; 
     static int cursor_x;
     static int cursor_y;
+    static int cursor_address;
+    static int cursor_mod;
+    static int screen;
+    static Array two_to_the;
+
 
 
     /** Initializes the screen, and locates the cursor at the screen's top-left. */
     function void init() {
+        var int i;
         do Output.initMap();
         let cursor_x = 0;
         let cursor_y = 0;
+        let screen = 16384;
+        let cursor_address = screen;
+        let cursor_mod = 0;
+        let i = 1;
+        let two_to_the = Array.new(16);
+        let two_to_the[0] = 1;
+        while (i < 16) {
+            let two_to_the[i] = two_to_the[i - 1] + two_to_the[i - 1];
+            let i = i + 1;
+        }
         return;
     }
 
@@ -183,44 +199,35 @@ class Output {
     /** Moves the cursor to the j-th column of the i-th row,
      *  and erases the character displayed there. */
     function void moveCursor(int i, int j) {
+        do Output.setCursor(i, j);
+        do Output.drawChar(32);
+        return;
+    }
+
+    function void setCursor(int i, int j) {
+        var int div;
         let cursor_x = j;
         let cursor_y = i;
-        do Output.drawChar(32);
+        let div = j / 2;  // x * 8 / 16 <-- x are in increments of 8 pixels
+        let cursor_mod = (8 * j) - (div * 16);
+        let cursor_address = screen + (i * 352) + div;
         return;
     }
 
     /** Displays the given character at the cursor location,
      *  and advances the cursor one column forward. */
     function void printChar(char c) {
-        var Array map;
-        var int i, j, mask, row;
-        let map = Output.getMap(c);
-        let j = 0;
-        do Screen.setColor(true);  // black
-        while (j < 11) {
-            let i = 0;
-            let row = map[j];
-            let mask = 1;
-            while (i < 8) {
-                if ((mask & row) = mask) {
-                    do Screen.drawPixel(8 * cursor_x + i, 11 * cursor_y + j);
-                }
-                let mask = mask + mask;
-                let i = i + 1;
-            }
-            let j = j + 1;
-        }
+        do Output.drawChar(c);
         if (cursor_x = 63) {
             if (cursor_y = 22) {
                 do Output.scroll();
             }
             else {
-                let cursor_x = 0;
-                let cursor_y = cursor_y + 1;
+                do Output.moveCursor(cursor_y + 1, 0);
             }
         }
         else {
-            let cursor_x = cursor_x + 1;
+            do Output.moveCursor(cursor_y, cursor_x + 1);
         }
         return;
     }
@@ -261,34 +268,31 @@ class Output {
     function void backSpace() {
         do Output.drawChar(32);
         if (cursor_x = 0) {
-            do Output.moveCursor(cursor_y - 1, 63);
+            do Output.setCursor(cursor_y - 1, 63);
         }
         else {
-            do Output.moveCursor(cursor_y, cursor_x - 1);
+            do Output.setCursor(cursor_y, cursor_x - 1);
         }
         return;
     }
 
     function void drawChar(char c) {
         var Array map;
-        var int i, j, mask, row;
+        var int j, mask, segment, address;
         let map = Output.getMap(c);
-        let i = 0;
         let j = 0;
+        let address = cursor_address;
         while (j < 11) {
-            let row = map[j];
-            let mask = 1;
-            while (i < 8) {
-                if ((mask & row) = mask) {
-                    do Screen.setColor(true);  // black
-                }
-                else {
-                    do Screen.setColor(false);
-                }
-                do Screen.drawPixel(8 * cursor_x + i, 11 * cursor_y + j);
-                let mask = mask + mask;
-                let i = i + 1;
+            let mask = map[j];
+            if (cursor_mod > 7) {
+                let mask = (mask * two_to_the[8]);  // TODO: How to do this without multiplication?
             }
+            else {
+                let mask = mask;
+            }
+            let segment = mask | Memory.peek(address);
+            do Memory.poke(address, segment);
+            let address = address + 32;
             let j = j + 1;
         }
         return;
@@ -296,8 +300,7 @@ class Output {
 
     function void scroll() {
         // For when the cursor hits the bottom
-        let cursor_x = 0;
-        let cursor_y = 0;
+        do Output.setCursor(0, 0);
         return;
     }
 }
