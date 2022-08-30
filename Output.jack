@@ -283,14 +283,25 @@ class Output {
         let j = 0;
         let address = cursor_address;
         while (j < 11) {
-            let mask = map[j];
+            if (c = 32) {
+                let mask = 255;
+            }
+            else {
+                let mask = map[j];
+            }
             if (cursor_mod > 7) {
+                // TODO: Might be better to left shift by 8
                 let mask = (mask * two_to_the[8]);  // TODO: How to do this without multiplication?
             }
             else {
                 let mask = mask;
             }
-            let segment = mask | Memory.peek(address);
+            if (c = 32) {
+                let segment = (~mask) & Memory.peek(address);
+            }
+            else {
+                let segment = mask | Memory.peek(address);
+            }
             do Memory.poke(address, segment);
             let address = address + 32;
             let j = j + 1;
