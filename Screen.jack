@@ -208,7 +208,6 @@ class Screen {
             let mod = mod0;
             let delta_a = 0;
             while (a < dx) {
-                // TODO: need to account for case where line end is inside a 16 bit address.
                 if ((mod + delta_a) > 15) {
                     let div = div + 1;
                     let mod = mod + delta_a - 16;
@@ -216,7 +215,7 @@ class Screen {
                 let addr = base_addr + div;
                 let segment_start = mod;
                 let segment_end = segment_start + (dx - a);
-                if (segment_end < 16) {
+                if (segment_end < 15) {
                     let mask = two_to_the[segment_end] - 1;
                     let a = dx;
                 }
