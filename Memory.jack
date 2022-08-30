@@ -79,6 +79,7 @@ class Memory {
      *  it available for future allocations. */
     function void deAlloc(Array o) {
         var int free, next_free;
+        do Memory.poke(o, 0);  // will be the end of the free list
         let free = free_list;
         let next_free = Memory.peek(free + 1);
         while (next_free > 1) {
